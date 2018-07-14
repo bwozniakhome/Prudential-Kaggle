@@ -1,6 +1,6 @@
 
 #install.packages('xgboost')
-#.61954 - Private Score
+#.61973 - Private Score
 
 library(xgboost)
 
@@ -27,10 +27,10 @@ ntrees = 100
 
 head(train)
 
-# searchGridSubCol <- expand.grid(subsample = c(.5, 1),
-#                                 colsample_bytree = c(.4, .8),
-#                                 max_depth = 5,
-#                                 eta = c(.05,.1)
+# searchGridSubCol <- expand.grid(subsample = c(.8, 1),
+#                                 colsample_bytree = .8,
+#                                 max_depth = c(8,20),
+#                                 eta = .1
 # )
 # 
 # ErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
@@ -52,7 +52,7 @@ head(train)
 # output <- as.data.frame(t(ErrorsHyperparameters))
 # head(output)
 
-xgb <- xgboost(xgb.data, nrounds = ntrees, eta = .1, max_depth = 8, colsample_bytree = .8, subsample = 1)
+xgb <- xgboost(xgb.data, nrounds = ntrees, eta = .1, max_depth = 8, colsample_bytree = .8, subsample = .8)
 
 xgb.test <- xgb.DMatrix(data.matrix(test[,2:NCOL(test)]))
 
