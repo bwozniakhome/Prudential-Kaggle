@@ -1,38 +1,46 @@
 
 #install.packages('xgboost')
-#.61349 - Private Score
+#.61954 - Private Score
 
 library(xgboost)
 
 train <- read.csv("C:/Users/bwozn/Documents/DataScience/Prudential Kaggle/train.csv")
 test <- read.csv("C:/Users/bwozn/Documents/DataScience/Prudential Kaggle/test.csv")
 
-# na_cols <- which(colSums(is.na(train)) > .8*NROW(train))
-# train <- train[,-na_cols]
+train_resp <- train$Response
 
-# train <- train[, -grep("^Medical_Keyword_", colnames(train))]
+train$Product_Info_2_char = as.factor(substring(train$Product_Info_2, 1, 1))
+train$Product_Info_2_num = as.factor(substring(train$Product_Info_2, 2, 2))
 
-xgb.data <- xgb.DMatrix(data.matrix(train[,2:(NCOL(train)-1)]), label = train[,NCOL(train)])
-colnames(xgb.data)
+drop <- "Response"
 
+train <- train[ , !(names(train) %in% drop)]
+
+test$Product_Info_2_char = as.factor(substring(test$Product_Info_2, 1, 1))
+test$Product_Info_2_num = as.factor(substring(test$Product_Info_2, 2, 2))
+
+# train_matrix <- data.matrix(train)
+xgb.data <- xgb.DMatrix(data.matrix(train[,2:NCOL(train)]), label = train_resp)
+
+# head(xgb.data)
 ntrees = 100
 
 head(train)
 
-# searchGridSubCol <- expand.grid(subsample = c(.5, 1), 
+# searchGridSubCol <- expand.grid(subsample = c(.5, 1),
 #                                 colsample_bytree = c(.4, .8),
-#                                 max_depth = c(4,8),
-#                                 eta = .01
+#                                 max_depth = 5,
+#                                 eta = c(.05,.1)
 # )
 # 
 # ErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
-#   
+# 
 #   #Extract Parameters to test
 #   currentSubsampleRate <- parameterList[["subsample"]]
 #   currentColsampleRate <- parameterList[["colsample_bytree"]]
 #   currentDepth <- parameterList[["max_depth"]]
 #   currentEta <- parameterList[["eta"]]
-#   xgboostModelCV <- xgb.cv(data =  xgb.data, nrounds = 10, nfold = 10, "max.depth" = currentDepth, "eta" = currentEta,                               
+#   xgboostModelCV <- xgb.cv(data =  xgb.data, nrounds = 10, nfold = 10, "max.depth" = currentDepth, "eta" = currentEta,
 #                            "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate, early_stopping_rounds = 10)
 #   xvalidationScores <- as.data.frame(xgboostModelCV$evaluation_log)
 #   rmse <- tail(xvalidationScores$test_rmse_mean, 1)
@@ -44,44 +52,9 @@ head(train)
 # output <- as.data.frame(t(ErrorsHyperparameters))
 # head(output)
 
-xgb <- xgboost(xgb.data, nrounds = ntrees, eta = .1, max_depth = 8, colsample_bytree = .4, subsample = 1)
-# test <- test[,-na_cols]
-# test <- test[, -grep("^Medical_Keyword_", colnames(test))]
+xgb <- xgboost(xgb.data, nrounds = ntrees, eta = .1, max_depth = 8, colsample_bytree = .8, subsample = 1)
 
 xgb.test <- xgb.DMatrix(data.matrix(test[,2:NCOL(test)]))
-
-
-install.packages('xgboost')
-library(xgboost)
-
-train <- read.csv("C:/Users/Brian Wozniak/Documents/DataScience/Prudential/train.csv")
-test <- read.csv("C:/Users/Brian Wozniak/Documents/DataScience/Prudential/test.csv")
-
-xgb.data <- xgb.DMatrix(data.matrix(train[,2:127]), label = train[,128])
-
-ntrees = 100
-
-searchGridSubCol <- expand.grid(subsample = c(.5, 1), 
-                                colsample_bytree = c(.4, .6, .8, 1),
-                                max_depth = c(4,6,8,10),
-                                eta = c(2/ntrees, 4/ntrees, 6/ntrees, 8/ntrees, 10/ntrees)
-)
-
-ErrorsHyperparameters <- apply(searchGridSubCol, 1, function(parameterList){
-  
-  #Extract Parameters to test
-  currentSubsampleRate <- parameterList[["subsample"]]
-  currentColsampleRate <- parameterList[["colsample_bytree"]]
-  currentDepth <- parameterList[["max_depth"]]
-  currentEta <- parameterList[["eta"]]
-  xgboostModelCV <- xgb.cv(data =  xgb.data, nrounds = ntrees, nfold = 10, "max.depth" = currentDepth, "eta" = currentEta,                               
-                           "subsample" = currentSubsampleRate, "colsample_bytree" = currentColsampleRate, early_stopping_rounds = 10)
-})
-
-
-xgb <- xgboost(xgb.data, nrounds = ntrees, eta = .1, max_depth = 5)
-
-xgb.test <- xgb.DMatrix(data.matrix(test[,2:127]))
 
 pred <- predict(xgb, xgb.test)
 
